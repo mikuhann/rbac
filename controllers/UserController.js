@@ -53,3 +53,42 @@ exports.login = async (req, res, next) => {
     next(e)
   }
 };
+
+exports.getUsers = async (req, res, next) => {
+  try {
+    const users = await User.find({});
+    res.status(200).json({
+      data: users,
+    });
+  } catch (e) {
+    next(e)
+  }
+};
+
+exports.updateUser = async (req, res, next) => {
+  try {
+    const update = req.body;
+    const userId = req.params.userId;
+    await User.findByIdAndUpdate(userId, update);
+    const user = await User.findById(userId);
+    res.status(200).json({
+      data: user,
+      message: 'User has been updated',
+    });
+  } catch (e) {
+    next(e)
+  }
+};
+
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    await User.findByIdAndDelete(userId);
+    res.status(200).json({
+      data: null,
+      message: 'User has been deleted',
+    });
+  } catch (e) {
+    next(e)
+  }
+};
