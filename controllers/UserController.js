@@ -2,6 +2,7 @@ const User = require('../models/UserModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { basic } = require('../models/constant');
+const { roles } = require('../roles');
 
 async function hashPassword(password) {
   return await bcrypt.hash(password, 10);
@@ -88,6 +89,37 @@ exports.deleteUser = async (req, res, next) => {
       data: null,
       message: 'User has been deleted',
     });
+  } catch (e) {
+    next(e)
+  }
+};
+
+exports.grantAccess = function (action, resource) {
+  return async (req, res, next) => {
+    try {
+      const permission = roles.can(req.user.role)[action](resource);
+      if (!permission.granted) {
+        return res.status(401).json({
+          error: `You don't have permission to perform this action`
+        });
+      }
+      next()
+    } catch (e) {
+      next(e)
+    }
+  }
+};
+
+exports.allowIfLoggedin = async (req, res, next) => {
+  try {
+    const user = res.locals.loggedInUser;
+    if (!user) {
+      return res.status(401).json({
+        error: 'You need to be logged in to access this route'
+      });
+    }
+    req.user = user;
+    next()
   } catch (e) {
     next(e)
   }
